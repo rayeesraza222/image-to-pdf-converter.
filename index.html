@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>I ❤️ Conversion - Image to PDF</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      background-size: cover;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 20px;
+    }
+
+    h1 .heart {
+      color: red;
+      font-size: 1.2em;
+    }
+
+    .upload-box {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 20px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 90%;
+    }
+
+    input[type="file"] {
+      margin: 15px 0;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background: #fff;
+      color: #333;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button {
+      background: #ff4e50;
+      background: linear-gradient(to right, #ff4e50, #f9d423);
+      border: none;
+      padding: 12px 20px;
+      border-radius: 25px;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+      width: 100%;
+    }
+
+    button:hover {
+      transform: scale(1.05);
+    }
+
+    footer {
+      margin-top: 30px;
+      font-size: 0.9em;
+      opacity: 0.8;
+    }
+
+    .developer {
+      margin-top: 10px;
+      font-size: 0.85em;
+      font-style: italic;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>I <span class="heart">❤️</span> Conversion</h1>
+
+  <div class="upload-box">
+    <h2>Image to PDF Converter</h2>
+    <input type="file" id="images" multiple accept="image/*">
+    <button onclick="convertToPDF()">Convert to PDF</button>
+  </div>
+
+  <footer>
+    Made with ❤️ for easy file conversion
+    <div class="developer">Developed by <strong>Rayees_ibn_muhhammad</strong></div>
+  </footer>
+
+  <script>
+    async function convertToPDF() {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF();
+      const files = document.getElementById('images').files;
+
+      if (files.length === 0) {
+        alert("Please select at least one image!");
+        return;
+      }
+
+      for (let i = 0; i < files.length; i++) {
+        const imgData = await toBase64(files[i]);
+        const img = new Image();
+        img.src = imgData;
+        await new Promise(res => img.onload = res);
+        const width = pdf.internal.pageSize.getWidth();
+        const height = (img.height * width) / img.width;
+        if (i > 0) pdf.addPage();
+        pdf.addImage(img, 'JPEG', 0, 0, width, height);
+      }
+      pdf.save("converted.pdf");
+    }
+
+    function toBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+      });
+    }
+  </script>
+
+</body>
+</html>
