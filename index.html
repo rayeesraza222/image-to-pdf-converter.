@@ -1,166 +1,456 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>I ❤️ Conversion - Image to PDF</title>
 
-  <!-- JS Libraries -->
+  <!-- PDF-LIB -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+  <!-- OpenCV.js (client-side image processing) -->
+  <script async src="https://docs.opencv.org/4.x/opencv.js"></script>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background: linear-gradient(135deg, #6a11cb, #2575fc);
+    :root{
+      --brand1:#6a11cb;
+      --brand2:#2575fc;
+      --accent1:#ff512f;
+      --accent2:#dd2476;
+      --heart:#ff2e63;
+    }
+
+    /* Page */
+    body{
+      font-family: Arial, Helvetica, sans-serif;
+      text-align:center;
+      background: linear-gradient(135deg, var(--brand1), var(--brand2));
       background-size: cover;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      color: #fff;
-      box-sizing: border-box;
+      min-height:100vh;
+      margin:0;
+      padding:20px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      color:#fff;
+      box-sizing:border-box;
+      transition: background .3s,color .3s;
     }
 
-    h1 { font-size: 6vw; margin-bottom: 20px; }
-    h1 .heart { color: #ff4e50; font-size: 1.2em; }
-
-    .upload-box {
-      background: #ffffff;
-      color: #333;
-      padding: 20px;
-      border-radius: 15px;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-      width: 100%;
-      max-width: 500px;
+    /* ✨ Attractive Title */
+    .title{
+      font-size: clamp(32px, 6vw, 72px);
+      font-weight: 900;
+      line-height:1.1;
+      margin: 10px 0 20px;
+      letter-spacing: 1.5px;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2), var(--accent1));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-size:200% auto;
+      animation: shine 3.5s linear infinite;
+      text-shadow: 0 0 0 rgba(0,0,0,0); /* keep text crisp */
+    }
+    .title span{
+      display:inline-block;
+      color: var(--heart);
+      -webkit-text-fill-color: var(--heart);
+      text-shadow: 0 0 18px rgba(255,46,99,.55), 0 0 36px rgba(255,46,99,.35);
+      animation: heartbeat 1.6s ease-in-out infinite;
+      transform-origin: center;
+    }
+    @keyframes shine{
+      0%{ background-position: 0% 50%; }
+      100%{ background-position: 200% 50%; }
+    }
+    @keyframes heartbeat{
+      0%,100%{ transform: scale(1); }
+      25%{ transform: scale(1.15); }
+      50%{ transform: scale(1); }
+      75%{ transform: scale(1.25); }
     }
 
-    h2 { color: #6a11cb; font-size: 5vw; margin-top: 0; }
-
-    input[type="file"], input[type="text"], select {
-      margin: 10px 0;
-      padding: 12px;
-      border: 2px solid #6a11cb;
-      border-radius: 8px;
-      background: #f8f9fc;
-      color: #333;
-      cursor: pointer;
-      width: 100%;
-      font-size: 4vw;
+    /* Card */
+    .upload-box{
+      background:#ffffff;
+      color:#333;
+      padding:20px;
+      border-radius:15px;
+      box-shadow:0 6px 20px rgba(0,0,0,.15);
+      width:100%;
+      max-width: 560px;
     }
 
-    button {
+    h2{
+      color: var(--brand1);
+      font-size: clamp(20px, 4.5vw, 28px);
+      margin: 4px 0 12px;
+    }
+
+    input[type="file"], input[type="text"], select{
+      margin:10px 0;
+      padding:12px;
+      border:2px solid var(--brand1);
+      border-radius:8px;
+      background:#f8f9fc;
+      color:#333;
+      cursor:pointer;
+      width:100%;
+      font-size: clamp(14px, 3.5vw, 16px);
+    }
+
+    button{
       background: linear-gradient(to right, #ff4e50, #f9d423);
-      border: none;
-      padding: 15px;
-      border-radius: 30px;
-      color: #fff;
-      font-size: 4.5vw;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      width: 100%;
+      border:none;
+      padding:15px;
+      border-radius:30px;
+      color:#fff;
+      font-size: clamp(16px, 4vw, 18px);
+      cursor:pointer;
+      transition: transform .18s ease, box-shadow .18s ease;
+      width:100%;
+    }
+    button:hover{
+      transform: translateY(-1px) scale(1.03);
+      box-shadow: 0 10px 22px rgba(0,0,0,.18);
     }
 
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-    }
+    footer{ margin-top:30px; font-size: clamp(12px,3.2vw,14px); opacity:.95; text-align:center; }
+    .developer{ margin-top:10px; font-style: italic; }
 
-    footer { margin-top: 30px; font-size: 3.5vw; opacity: 0.9; text-align: center; }
-    .developer { margin-top: 10px; font-size: 3.5vw; font-style: italic; opacity: 0.9; }
+    /* Deblur UI */
+    .deblur-card {max-width: 980px;margin: 24px auto;padding: 16px;border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.08);background:#fff;color:#111}
+    .deblur-row {display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .deblur-row > * {flex: none}
+    .deblur-preview {display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+    .deblur-preview img, .deblur-preview canvas {width:100%;max-height:360px;object-fit:contain;
+      background:#f6f7f9;border:1px solid #e5e7eb;border-radius:12px}
+    .hint {font-size:.9rem;color:#666}
+    .btn {padding:10px 16px;border:0;border-radius:10px;cursor:pointer;background:#111;color:#fff}
+    .btn[disabled]{opacity:.5;cursor:not-allowed}
+    .range {width:220px}
+
+    /* Dark Mode */
+    .dark-mode{
+      background:#0f1225;
+      color:#f3f4f6;
+    }
+    .dark-mode .upload-box{ background:#171a2f; color:#e5e7eb; border:1px solid rgba(255,255,255,.06); }
+    .dark-mode .deblur-card{ background:#171a2f; color:#e5e7eb; border:1px solid rgba(255,255,255,.06); }
+    .dark-mode h2{ color:#a0b4ff; }
   </style>
 </head>
 <body>
 
-  <h1>I <span class="heart">❤️</span> Conversion</h1>
+  <!-- ✨ Attractive Header -->
+  <h1 class="title">I <span>❤️</span> Conversion</h1>
 
+  <!-- Main Card -->
   <div class="upload-box">
-    <h2 class="glow-text">Image to PDF Converter</h2>
+    <h2>Image to PDF Converter</h2>
 
-    
-    <!-- Main Image Upload -->
-    <input type="file" id="images" multiple accept="image/*">
+    <!-- Images -->
+    <input type="file" id="images" multiple accept="image/*"/>
 
-    <!-- Branding Inputs -->
-    <input type="text" id="brandText" placeholder="Enter branding text (optional)">
-    <input type="file" id="brandLogo" accept="image/*">
+    <!-- Branding -->
+    <input type="text" id="brandText" placeholder="Enter branding text (optional)"/>
+    <input type="file" id="brandLogo" accept="image/*"/>
 
-    <!-- Compression Level -->
+    <!-- Compression -->
     <select id="compressionLevel">
       <option value="1">High Quality</option>
       <option value="0.7">Medium</option>
       <option value="0.5">Small Size</option>
     </select>
 
-    <!-- Convert Button -->
+    <!-- Convert -->
     <button id="convertBtn">Convert to PDF</button>
   </div>
 
-<footer>
-    Made with ❤️ for easy file conversion
-    <div class="developer">
-        Developed by <strong>Rayees_ibn_muhhammad</strong> | 
-
-        <!-- Instagram -->
-        <a href="https://instagram.com/
-rayees_ibn_muhhammad" target="_blank" 
-           style="text-decoration:none; color:#E1306C; display:inline-flex; align-items:center; gap:5px; margin-right:10px;">
-            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" 
-                 alt="Instagram" 
-                 style="width:18px; height:18px; transition:0.3s; filter: invert(34%) sepia(99%) saturate(7469%) hue-rotate(321deg) brightness(95%) contrast(101%);">
-            
-        </a>
-
-        <!-- Facebook -->
-        <a href="https://facebook.com/rayees_ibn_muhhammad" target="_blank" 
-           style="text-decoration:none; color:#1877F2; display:inline-flex; align-items:center; gap:5px;">
-            <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg" 
-                 alt="Facebook" 
-                 style="width:18px; height:18px; transition:0.3s; filter: invert(29%) sepia(98%) saturate(7460%) hue-rotate(201deg) brightness(95%) contrast(101%);">
-            
-        </a>
+  <!-- Deblur Tool -->
+  <section class="deblur-card" id="deblur-tool">
+    <h2>🪄 Fix Blurry Image (Beta)</h2>
+    <div class="deblur-row" style="margin-top:8px">
+      <input type="file" id="deblur-input" accept="image/*">
+      <label class="hint">Strength:
+        <input type="range" id="deblur-strength" class="range" min="0" max="100" value="40">
+      </label>
+      <button class="btn" id="deblur-run" disabled>Fix Blur</button>
+      <a class="btn" id="deblur-download" download="deblurred.png" style="text-decoration:none;display:none">Download</a>
+      <span id="deblur-status" class="hint">Load an image to start.</span>
     </div>
 
-    <!-- Dark/Light mode toggle button -->
-    <button id="toggle-theme" 
-            style="margin-top:10px; padding:5px 12px; border:none; border-radius:8px; cursor:pointer; background:#333; color:white;">
-        🌙 Dark Mode
+    <div class="deblur-preview" style="margin-top:16px">
+      <div>
+        <div class="hint">Before</div>
+        <img id="deblur-before" alt="Original preview">
+      </div>
+      <div>
+        <div class="hint">After</div>
+        <canvas id="deblur-after"></canvas>
+      </div>
+    </div>
+
+    <!-- hidden working canvas (don’t remove) -->
+    <canvas id="deblur-work" style="display:none"></canvas>
+  </section>
+
+  <footer>
+    Made with ❤️ for easy file conversion
+    <div class="developer">
+      Developed by <strong>Rayees_ibn_muhhammad</strong> |
+      <!-- Instagram -->
+      <a href="https://instagram.com/rayees_ibn_muhhammad" target="_blank"
+         style="text-decoration:none; color:#E1306C; display:inline-flex; align-items:center; gap:5px; margin-right:10px;">
+        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg"
+             alt="Instagram" style="width:18px;height:18px;filter: invert(34%) sepia(99%) saturate(7469%) hue-rotate(321deg) brightness(95%) contrast(101%);">
+      </a>
+      <!-- Facebook -->
+      <a href="https://facebook.com/rayees_ibn_muhhammad" target="_blank"
+         style="text-decoration:none; color:#1877F2; display:inline-flex; align-items:center; gap:5px;">
+        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/facebook.svg"
+             alt="Facebook" style="width:18px;height:18px;filter: invert(29%) sepia(98%) saturate(7460%) hue-rotate(201deg) brightness(95%) contrast(101%);">
+      </a>
+    </div>
+
+    <!-- Dark/Light mode toggle -->
+    <button id="toggle-theme"
+            style="margin-top:10px; padding:6px 14px; border:none; border-radius:10px; cursor:pointer; background:#333; color:#fff;">
+      🌙 Dark Mode
     </button>
-</footer>
+  </footer>
 
-<script>
-  const btn = document.getElementById("toggle-theme");
-  btn.addEventListener("click", () => {
-    document.body.classList.toggle("dark-mode");
-    btn.innerText = document.body.classList.contains("dark-mode") ? "☀️ Light Mode" : "🌙 Dark Mode";
-    btn.style.background = document.body.classList.contains("dark-mode") ? "#f0f0f0" : "#333";
-    btn.style.color = document.body.classList.contains("dark-mode") ? "#333" : "white";
-  });
-</script>
+  <!-- Theme toggle -->
+  <script>
+    const themeBtn = document.getElementById("toggle-theme");
+    themeBtn.addEventListener("click", () => {
+      document.body.classList.toggle("dark-mode");
+      const dark = document.body.classList.contains("dark-mode");
+      themeBtn.innerText = dark ? "☀️ Light Mode" : "🌙 Dark Mode";
+      themeBtn.style.background = dark ? "#f0f0f0" : "#333";
+      themeBtn.style.color = dark ? "#333" : "#fff";
+    });
+  </script>
 
-<style>
-  /* Dark mode styles */
-  .dark-mode {
-    background:#121212;
-    color:white;
-    transition: background 0.3s, color 0.3s;
-  }
+  <!-- Core JS (PDF conversion + Deblur) -->
+  <script>
+    const fileInput = document.getElementById('images');
+    const convertBtn = document.getElementById('convertBtn');
 
-  footer {
-    padding: 15px;
-    text-align: center;
-    font-size: 14px;
-  }
-</style>
+    // Helpers
+    function loadImage(url){
+      return new Promise((res, rej) => {
+        const img = new Image();
+        img.onload = () => res(img);
+        img.onerror = rej;
+        img.src = url;
+      });
+    }
+    function dataUrlToArrayBuffer(dataUrl){
+      const base64 = dataUrl.split(',')[1];
+      const binary = atob(base64);
+      const len = binary.length;
+      const buf = new Uint8Array(len);
+      for (let i=0;i<len;i++) buf[i] = binary.charCodeAt(i);
+      return buf.buffer;
+    }
+    function downloadBytes(bytes, filename){
+      const blob = new Blob([bytes], { type:'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    }
+    async function getDeblurredPNGBlob(){
+      const canvasAfter = document.getElementById('deblur-after');
+      if (!canvasAfter || canvasAfter.width === 0 || canvasAfter.height === 0) return null;
+      return new Promise((resolve)=> {
+        canvasAfter.toBlob((blob)=> resolve(blob), 'image/png', 0.95);
+      });
+    }
 
+    // Convert to PDF
+    convertBtn.addEventListener('click', async () => {
+      const files = fileInput.files;
+      if (!files || files.length === 0) {
+        alert('Please select at least one image.');
+        return;
+      }
 
+      convertBtn.disabled = true;
+      const oldText = convertBtn.textContent;
+      convertBtn.textContent = 'Converting...';
 
+      try{
+        const { PDFDocument, rgb } = PDFLib;
+        const pdfDoc = await PDFDocument.create();
 
+        const brandText = document.getElementById('brandText').value.trim();
+        const brandLogoFile = document.getElementById('brandLogo').files[0];
+        const compressionLevel = parseFloat(document.getElementById('compressionLevel').value);
 
-  <!-- Link JS -->
-  <script src="scripts.js"></script>
+        let brandLogoImg = null;
+        if (brandLogoFile){
+          const logoArrayBuffer = await brandLogoFile.arrayBuffer();
+          if (brandLogoFile.type === 'image/png'){
+            brandLogoImg = await pdfDoc.embedPng(logoArrayBuffer);
+          }else{
+            brandLogoImg = await pdfDoc.embedJpg(logoArrayBuffer);
+          }
+        }
+
+        // If user deblurred a single image, prefer that result for the first page.
+        const deblurBlob = await getDeblurredPNGBlob();
+        const useDeblurredForFirst = !!deblurBlob && files.length === 1;
+
+        for (let i=0;i<files.length;i++){
+          let sourceBlob;
+
+          if (useDeblurredForFirst && i===0){
+            sourceBlob = deblurBlob;
+          } else {
+            sourceBlob = files[i];
+          }
+
+          const objUrl = URL.createObjectURL(sourceBlob);
+          const img = await loadImage(objUrl);
+          URL.revokeObjectURL(objUrl);
+
+          // Compress by resizing + JPEG quality
+          const canvas = document.createElement('canvas');
+          canvas.width  = Math.max(1, Math.round(img.naturalWidth  * compressionLevel));
+          canvas.height = Math.max(1, Math.round(img.naturalHeight * compressionLevel));
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', compressionLevel);
+          const compressedBuffer = dataUrlToArrayBuffer(compressedDataUrl);
+          const embeddedImage = await pdfDoc.embedJpg(compressedBuffer);
+
+          // Create new page sized to image
+          const page = pdfDoc.addPage([embeddedImage.width, embeddedImage.height]);
+          page.drawImage(embeddedImage, { x:0, y:0, width: embeddedImage.width, height: embeddedImage.height });
+
+          // Branding logo
+          if (brandLogoImg){
+            const logoWidth = 80;
+            const logoHeight = (brandLogoImg.height / brandLogoImg.width) * logoWidth;
+            page.drawImage(brandLogoImg, {
+              x: page.getWidth() - logoWidth - 20,
+              y: page.getHeight() - logoHeight - 20,
+              width: logoWidth,
+              height: logoHeight
+            });
+          }
+          // Branding text
+          if (brandText){
+            page.drawText(brandText, {
+              x: 20, y: 20, size: 18, color: rgb(0.5,0.5,0.5)
+            });
+          }
+        }
+
+        const pdfBytes = await pdfDoc.save();
+        downloadBytes(pdfBytes, 'r_i_m.pdf');
+
+      }catch(err){
+        console.error(err);
+        alert('Error creating PDF: ' + err.message);
+      }finally{
+        convertBtn.disabled = false;
+        convertBtn.textContent = oldText;
+      }
+    });
+
+    // ====== Deblur (OpenCV Unsharp Mask) ======
+    (() => {
+      const $ = (id) => document.getElementById(id);
+
+      const input = $('deblur-input');
+      const btnRun = $('deblur-run');
+      const btnDownload = $('deblur-download');
+      const strengthRange = $('deblur-strength');
+      const statusEl = $('deblur-status');
+
+      const imgBefore = $('deblur-before');
+      const canvasAfter = $('deblur-after');
+      const canvasWork  = $('deblur-work');
+
+      let imageLoaded = false;
+
+      function waitForOpenCV(){
+        return new Promise((resolve) => {
+          const check = () => { (window.cv && cv.Mat) ? resolve() : setTimeout(check, 80); };
+          check();
+        });
+      }
+
+      input.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+
+        statusEl.textContent = 'Loading image...';
+        btnRun.disabled = true;
+        btnDownload.style.display = 'none';
+
+        const url = URL.createObjectURL(file);
+        imgBefore.onload = () => {
+          canvasWork.width = imgBefore.naturalWidth;
+          canvasWork.height = imgBefore.naturalHeight;
+          canvasAfter.width = imgBefore.naturalWidth;
+          canvasAfter.height = imgBefore.naturalHeight;
+
+          const ctx = canvasWork.getContext('2d');
+          ctx.drawImage(imgBefore, 0, 0);
+
+          imageLoaded = true;
+          btnRun.disabled = false;
+          statusEl.textContent = 'Ready. Choose strength and click “Fix Blur”.';
+          URL.revokeObjectURL(url);
+        };
+        imgBefore.src = url;
+      });
+
+      function unsharpMaskToCanvas(srcCanvas, dstCanvas, amount = 0.45){
+        const src = cv.imread(srcCanvas);
+        const blurred = new cv.Mat();
+        const dst = new cv.Mat();
+
+        cv.GaussianBlur(src, blurred, new cv.Size(0,0), 3, 3, cv.BORDER_DEFAULT);
+        cv.addWeighted(src, 1 + amount, blurred, -amount, 0, dst);
+
+        cv.imshow(dstCanvas, dst);
+        src.delete(); blurred.delete(); dst.delete();
+      }
+
+      btnRun.addEventListener('click', async () => {
+        if (!imageLoaded) return;
+        statusEl.textContent = 'Loading engine...';
+        btnRun.disabled = true;
+
+        await waitForOpenCV();
+
+        statusEl.textContent = 'Fixing blur...';
+        const amount = Number(strengthRange.value) / 100 * 1.5; // 0..1.5
+        unsharpMaskToCanvas(canvasWork, canvasAfter, amount);
+
+        canvasAfter.toBlob((blob) => {
+          const url = URL.createObjectURL(blob);
+          btnDownload.href = url;
+          btnDownload.style.display = 'inline-block';
+          statusEl.textContent = 'Done ✔ You can download or use this in PDF.';
+          btnRun.disabled = false;
+        }, 'image/png', 0.95);
+      });
+
+      strengthRange.addEventListener('input', () => {
+        if (!imageLoaded) return;
+        if (!(window.cv && cv.Mat)) return; // only after cv is ready
+        const amount = Number(strengthRange.value) / 100 * 1.5;
+        unsharpMaskToCanvas(canvasWork, canvasAfter, amount);
+      });
+    })();
+  </script>
 </body>
 </html>
