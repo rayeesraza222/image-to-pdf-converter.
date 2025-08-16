@@ -4,12 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>I ❤️ Conversion - Image to PDF</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- JS Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
       text-align: center;
-      background: linear-gradient(135deg, #6a11cb, #2575fc); /* Soft blue-purple gradient */
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
       background-size: cover;
       min-height: 100vh;
       margin: 0;
@@ -22,15 +25,8 @@
       box-sizing: border-box;
     }
 
-    h1 {
-      font-size: 6vw;
-      margin-bottom: 20px;
-    }
-
-    h1 .heart {
-      color: #ff4e50;
-      font-size: 1.2em;
-    }
+    h1 { font-size: 6vw; margin-bottom: 20px; }
+    h1 .heart { color: #ff4e50; font-size: 1.2em; }
 
     .upload-box {
       background: #ffffff;
@@ -42,15 +38,11 @@
       max-width: 500px;
     }
 
-    h2 {
-      color: #6a11cb;
-      font-size: 5vw;
-      margin-top: 0;
-    }
+    h2 { color: #6a11cb; font-size: 5vw; margin-top: 0; }
 
-    input[type="file"] {
-      margin: 15px 0;
-      padding: 15px;
+    input[type="file"], input[type="text"], select {
+      margin: 10px 0;
+      padding: 12px;
       border: 2px solid #6a11cb;
       border-radius: 8px;
       background: #f8f9fc;
@@ -77,32 +69,8 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
-    footer {
-      margin-top: 30px;
-      font-size: 3.5vw;
-      opacity: 0.9;
-      text-align: center;
-    }
-
-    .developer {
-      margin-top: 10px;
-      font-size: 3.5vw;
-      font-style: italic;
-      opacity: 0.9;
-    }
-
-    @media (max-width: 500px) {
-      h1 {
-        font-size: 8vw;
-      }
-      h2 {
-        font-size: 6vw;
-      }
-      input[type="file"], button {
-        font-size: 5vw;
-        padding: 18px;
-      }
-    }
+    footer { margin-top: 30px; font-size: 3.5vw; opacity: 0.9; text-align: center; }
+    .developer { margin-top: 10px; font-size: 3.5vw; font-style: italic; opacity: 0.9; }
   </style>
 </head>
 <body>
@@ -110,9 +78,25 @@
   <h1>I <span class="heart">❤️</span> Conversion</h1>
 
   <div class="upload-box">
-    <h2>Image to PDF Converter</h2>
+    <h2 class="glow-text">Image to PDF Converter</h2>
+
+    
+    <!-- Main Image Upload -->
     <input type="file" id="images" multiple accept="image/*">
-    <button onclick="convertToPDF()">Convert to PDF</button>
+
+    <!-- Branding Inputs -->
+    <input type="text" id="brandText" placeholder="Enter branding text (optional)">
+    <input type="file" id="brandLogo" accept="image/*">
+
+    <!-- Compression Level -->
+    <select id="compressionLevel">
+      <option value="1">High Quality</option>
+      <option value="0.7">Medium</option>
+      <option value="0.5">Small Size</option>
+    </select>
+
+    <!-- Convert Button -->
+    <button id="convertBtn">Convert to PDF</button>
   </div>
 
   <footer>
@@ -120,39 +104,7 @@
     <div class="developer">Developed by <strong>Rayees_ibn_muhhammad</strong></div>
   </footer>
 
-  <script>
-    async function convertToPDF() {
-      const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF();
-      const files = document.getElementById('images').files;
-
-      if (files.length === 0) {
-        alert("Please select at least one image!");
-        return;
-      }
-
-      for (let i = 0; i < files.length; i++) {
-        const imgData = await toBase64(files[i]);
-        const img = new Image();
-        img.src = imgData;
-        await new Promise(res => img.onload = res);
-        const width = pdf.internal.pageSize.getWidth();
-        const height = (img.height * width) / img.width;
-        if (i > 0) pdf.addPage();
-        pdf.addImage(img, 'JPEG', 0, 0, width, height);
-      }
-      pdf.save("converted.pdf");
-    }
-
-    function toBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-      });
-    }
-  </script>
-
+  <!-- Link JS -->
+  <script src="scripts.js"></script>
 </body>
 </html>
